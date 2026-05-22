@@ -1,0 +1,24 @@
+[project]
+name = "tp-ciencia-de-datos-2026"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Kevin Wagner",email = "kevinwe85@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "pandas>=2.0.0",
+    "numpy>=1.24.0,<2.1.0",
+    "matplotlib>=3.7.0",
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+package-mode = false
