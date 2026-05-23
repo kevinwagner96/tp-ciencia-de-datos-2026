@@ -22,8 +22,8 @@ class RecommenderEngine:
         else:
             self.user_history = {}
             
-        # Cargar top 5 cold start
-        cold_start_path = os.path.join(model_dir, 'top_5_cold_start.json')
+        # Cargar ranking de cold start completo
+        cold_start_path = os.path.join(model_dir, 'cold_start_ranking.json')
         if os.path.exists(cold_start_path):
             with open(cold_start_path, 'r', encoding='utf-8') as f:
                 self.cold_start = json.load(f)
