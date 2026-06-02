@@ -30,7 +30,10 @@ class RecommenderEngine:
         else:
             self.cold_start = []
 
-    def get_recommendations(self, user_id, k=5):
+    def get_recommendations(self, user_id=None, k=5):
+        if user_id is None:
+            return self.cold_start[:k]
+            
         try:
             user_id = int(user_id)
         except ValueError:
