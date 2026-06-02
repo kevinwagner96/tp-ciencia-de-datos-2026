@@ -1,4 +1,5 @@
 import sqlite3
+import math
 from app.services.db.database import get_db_connection
 
 class DBController:
@@ -35,6 +36,57 @@ class DBController:
         return games
 
     @staticmethod
+    def get_user_played_games(user_id: int) -> list[str]:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT DISTINCT g.title 
+            FROM interactions i
+            JOIN games g ON i.game_id = g.id
+            WHERE i.user_id = ?
+        """, (user_id,))
+        games = [row["title"] for row in cursor.fetchall()]
+        conn.close()
+        return games
+
+    @staticmethod
+    def get_user_game_scores(user_id: int) -> dict[str, float]:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT g.title, i.behavior, i.hours
+            FROM interactions i
+            JOIN games g ON i.game_id = g.id
+            WHERE i.user_id = ?
+        """, (user_id,))
+        scores = {}
+        for row in cursor.fetchall():
+            if row["behavior"] == "play":
+                score = 1.0 + math.log1p(row["hours"])
+            else:
+                score = 0.1
+            scores[row["title"]] = max(scores.get(row["title"], 0.0), score)
+        conn.close()
+        return scores
+
+    @staticmethod
+    def get_cold_start_ranking(k: int = 5) -> list[str]:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # El ranking cold_start se calcula agrupando los juegos con mas interacciones únicas
+        cursor.execute("""
+            SELECT g.title, COUNT(DISTINCT i.user_id) as interaction_count
+            FROM interactions i
+            JOIN games g ON i.game_id = g.id
+            GROUP BY g.id, g.title
+            ORDER BY interaction_count DESC
+            LIMIT ?
+        """, (k,))
+        ranking = [row["title"] for row in cursor.fetchall()]
+        conn.close()
+        return ranking
+
+    @staticmethod
     def record_purchase(user_id: int, game_id: int):
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -58,9 +110,6 @@ class DBController:
         cursor = conn.cursor()
         try:
             cursor.execute("INSERT OR IGNORE INTO users (id) VALUES (?)", (user_id,))
-            # Eliminar el registro de 'purchase' si existe, ya que 'play' implica que ya lo posee
-            cursor.execute("DELETE FROM interactions WHERE user_id = ? AND game_id = ? AND behavior = 'purchase'", (user_id, game_id))
-            
             cursor.execute("""
                 INSERT INTO interactions (user_id, game_id, behavior, hours)
                 VALUES (?, ?, 'play', ?)

@@ -11,6 +11,18 @@ router = APIRouter()
 def ping():
     return {"message": "pong"}
 
+@router.post("/admin/retrain-model")
+def retrain_model():
+    """
+    Reentrena la matriz de similitud de filtrado colaborativo usando los datos
+    actuales en la base de datos SQLite.
+    """
+    try:
+        RecommenderController.retrain_model()
+        return {"message": "Modelo reentrenado y recargado exitosamente"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/recommendations")
 def get_recommendations(user_id: Optional[int] = None, k: int = Query(5, ge=1, le=50)):
     """

@@ -16,15 +16,12 @@ class PlayRequest(BaseModel):
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "model_artifacts")
 
-# Verificar si existen los artefactos, si no, generarlos
+# Verificar si existe el artefacto de la matriz, si no, generarlo
 sim_path = os.path.join(MODEL_DIR, "similarity_matrix.pkl")
-history_path = os.path.join(MODEL_DIR, "user_history.json")
-cold_start_path = os.path.join(MODEL_DIR, "cold_start_ranking.json")
 
-if not (os.path.exists(sim_path) and os.path.exists(history_path) and os.path.exists(cold_start_path)):
-    print("Artefactos no encontrados. Generándolos automáticamente usando initialize_artifacts...")
-    DATA_PATH = os.path.join(os.path.dirname(BASE_DIR), "dataset-videojuegos.csv")
-    generate_artifacts(data_path=DATA_PATH, output_dir=MODEL_DIR)
+if not os.path.exists(sim_path):
+    print("Matriz de similitud no encontrada. Generándola automáticamente usando initialize_artifacts...")
+    generate_artifacts(output_dir=MODEL_DIR)
 
 print("Cargando artefactos del modelo en memoria...")
 recommender = RecommenderEngine(model_dir=MODEL_DIR)
