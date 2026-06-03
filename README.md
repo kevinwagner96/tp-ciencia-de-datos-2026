@@ -38,7 +38,7 @@ poetry run python app/main.py
 ```
 *(Nota alternativa: Si preferís no usar el comando de poetry o ya tenés la carpeta `.venv` generada, podés correr directamente `.venv/bin/python app/main.py`)*
 
-4. Verás en la consola que el motor carga o genera los artefactos y luego inicia el servidor en el puerto `3000`.
+4. Verás en la consola que el motor carga o genera los artefactos y luego inicia el servidor en el puerto `8000`.
 
 ---
 
@@ -46,22 +46,21 @@ poetry run python app/main.py
 
 La API REST cuenta con documentación autogenerada interactiva (Swagger). Una vez iniciada la aplicación, podés acceder ingresando en tu navegador a:
 
-👉 **http://localhost:3000/docs**
+👉 **http://localhost:8000/docs**
 
-### Endpoint Principal: `/recommendations`
+### Endpoint Principal: `/users/{user_id}/recomendations`
 
-Este endpoint devuelve una lista de los `k` juegos recomendados para un usuario específico.
+Este endpoint devuelve una lista limitada de juegos recomendados para un usuario específico.
 
 **Método:** `GET`
 
 **Parámetros URL (Query):**
-- `user_id` *(Opcional, Entero)*: El ID único del usuario para quien se piden recomendaciones. Si **no se provee**, o el usuario no existe en la base de datos (nuevo usuario), el sistema devolverá el ranking general de popularidad (Cold Start).
-- `k` *(Opcional, Entero)*: Cantidad de recomendaciones deseadas. El valor por defecto es `5`. (Mínimo `1`, máximo `50`).
+- `limit` *(Opcional, Entero)*: Cantidad de recomendaciones deseadas. El valor por defecto es `5`. (Mínimo `1`, máximo `50`).
 
 **Ejemplo de Petición:**
 ```bash
 curl -X 'GET' \
-  'http://localhost:3000/recommendations?user_id=207009485&k=5' \
+  'http://localhost:8000/users/207009485/recomendations?limit=5' \
   -H 'accept: application/json'
 ```
 
@@ -69,7 +68,7 @@ curl -X 'GET' \
 ```json
 {
   "user_id": 207009485,
-  "k": 5,
+  "limit": 5,
   "recommendations": [
     "Juego Recomendado 1",
     "Juego Recomendado 2",
@@ -79,3 +78,9 @@ curl -X 'GET' \
   ]
 }
 ```
+
+### Otros endpoints
+
+- `POST /users/{user_id}/purchase`: registra una compra. Body: `{ "game_title": "Nombre del juego" }`.
+- `POST /users/{user_id}/play`: registra horas jugadas. Body: `{ "game_title": "Nombre del juego", "hours": 2.5 }`.
+- `GET /games/ranking?limit=50`: devuelve el ranking global de juegos más populares.

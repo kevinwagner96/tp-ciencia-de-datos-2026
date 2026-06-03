@@ -4,11 +4,9 @@ from app.services.recommender.recommender import RecommenderEngine
 from app.services.recommender.initialize_artifacts import generate_artifacts
 
 class PurchaseRequest(BaseModel):
-    user_id: int
     game_title: str
 
 class PlayRequest(BaseModel):
-    user_id: int
     game_title: str
     hours: float
 

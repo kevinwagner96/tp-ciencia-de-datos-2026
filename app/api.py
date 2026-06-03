@@ -1,5 +1,4 @@
 import sqlite3
-from typing import Optional
 from fastapi import APIRouter, Query, HTTPException
 from app.controllers.db.controller import DBController
 from app.controllers.recommender.controller import RecommenderController
@@ -23,27 +22,27 @@ def retrain_model():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/recommendations")
-def get_recommendations(user_id: Optional[int] = None, k: int = Query(5, ge=1, le=50)):
+@router.get("/users/{user_id}/recomendations")
+def get_user_recommendations(user_id: int, limit: int = Query(5, ge=1, le=50)):
     """
-    Retorna las top k recomendaciones de juegos para el usuario especificado.
-    Si no se especifica usuario, devuelve el ranking general (Cold Start).
+    Retorna las recomendaciones de juegos para el usuario especificado.
+    Si el usuario no existe o no tiene interacciones, devuelve el ranking general (Cold Start).
     """
-    recs = RecommenderController.get_recommendations(user_id, k)
+    recs = RecommenderController.get_recommendations(user_id, limit)
     return {
         "user_id": user_id,
-        "k": k,
+        "limit": limit,
         "recommendations": recs
     }
 
-@router.get("/ranking")
-def get_ranking(k: int = Query(50, ge=1, le=100)):
+@router.get("/games/ranking")
+def get_games_ranking(limit: int = Query(50, ge=1, le=100)):
     """
     Retorna el ranking global de juegos más populares.
     """
-    ranking = RecommenderController.get_global_ranking(k)
+    ranking = RecommenderController.get_global_ranking(limit)
     return {
-        "k": k,
+        "limit": limit,
         "ranking": ranking
     }
 
@@ -60,24 +59,24 @@ def get_user_games(user_id: int):
         "games": games
     }
 
-@router.post("/interactions/purchase")
-def record_purchase(request: PurchaseRequest):
+@router.post("/users/{user_id}/purchase")
+def record_purchase(user_id: int, request: PurchaseRequest):
     game_id = DBController.get_game_id(request.game_title)
     if not game_id:
         raise HTTPException(status_code=404, detail="Juego inexistente")
     
-    if DBController.user_owns_game(request.user_id, game_id):
+    if DBController.user_owns_game(user_id, game_id):
         raise HTTPException(status_code=400, detail="El usuario ya posee este juego")
     
     try:
-        DBController.record_purchase(request.user_id, game_id)
+        DBController.record_purchase(user_id, game_id)
     except sqlite3.Error as e:
         raise HTTPException(status_code=500, detail=str(e))
         
     return {"message": "Compra registrada exitosamente"}
 
-@router.post("/interactions/play")
-def record_play(request: PlayRequest):
+@router.post("/users/{user_id}/play")
+def record_play(user_id: int, request: PlayRequest):
     if request.hours <= 0:
         raise HTTPException(status_code=400, detail="Las horas deben ser mayores a 0")
         
@@ -85,11 +84,11 @@ def record_play(request: PlayRequest):
     if not game_id:
         raise HTTPException(status_code=404, detail="Juego inexistente")
     
-    if not DBController.user_owns_game(request.user_id, game_id):
+    if not DBController.user_owns_game(user_id, game_id):
         raise HTTPException(status_code=403, detail="Debe comprar el juego antes de poder jugarlo")
     
     try:
-        DBController.record_play(request.user_id, game_id, request.hours)
+        DBController.record_play(user_id, game_id, request.hours)
     except sqlite3.Error as e:
         raise HTTPException(status_code=500, detail=str(e))
         
